@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://zcoder-904x.onrender.com/api/$1" },
+    { "source": "/(.*)", "destination": "/" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; img-src 'self' https://zcoder-904x.onrender.com data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://zcoder-904x.onrender.com http://localhost:5000;"
+        }
+      ]
+    }
+  ]
+}
