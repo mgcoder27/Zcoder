@@ -1,8 +1,5 @@
 # Zcoder: All Your Coding Challenges in One Place
 
-#Deployment link
-https://dezcoder.vercel.app/
-
 Welcome to Zcoder, the ultimate hub for all your bookmarked coding problems! Collect and manage your favorite challenges from various coding platforms in one place. Start solving and keep track of your progress effortlessly!
 
 ## Table of Contents
@@ -79,7 +76,7 @@ We welcome contributions from the community! To contribute to Zcoder, please fol
 
 ## Contact
 
-If you have any questions, suggestions, or feedback, feel free to contact us at shreeya1904@gmail.com
+If you have any questions, suggestions, or feedback, feel free to contact us at manugarg1602@gmail.com
 
 
 Thank you for using Zcoder! Happy coding!
