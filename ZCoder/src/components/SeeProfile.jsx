@@ -10,7 +10,6 @@ import { useState } from 'react';
 const SeeProfile = () => {
   const location = useLocation();
  const data = location.state.data.user;
-  console.log(data);
 
   const [codeforces ,setCodeforces]= useState('');
   const [codechef ,setCodechef]= useState('');

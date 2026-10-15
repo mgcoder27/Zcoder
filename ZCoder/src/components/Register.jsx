@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {  toast } from 'react-toastify';
+import { API_URL } from '../constants/api';
 
 
 
@@ -29,10 +30,9 @@ const Register = () => {
     formData.append('college', credentials.college);
     formData.append('profile_image', credentials.profile_image);
     formData.append('userhandle', credentials.userhandle);
-    console.log(credentials);
 
     try {
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch(`${API_URL}/register`, {
         method: "POST",
         body: formData
       });
@@ -44,8 +44,6 @@ const Register = () => {
 
         navigateTo('/')
       } else {
-        const data = await response.json();
-        console.log(data);
         toast.success("Registration successful")
         navigateTo('/')
          // Uncomment this to navigate to home after successful registration

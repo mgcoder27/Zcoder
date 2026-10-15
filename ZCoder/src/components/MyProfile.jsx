@@ -4,6 +4,7 @@ import {useEffect, useState } from 'react';
 import  './Profile.css';
 import {  platformLinks } from "../constants";
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../constants/api';
 import img1 from "../assets/codeforces.webp";
 import img2 from "../assets/leetcode.svg";
 import img3 from "../assets/gfg.png";
@@ -64,7 +65,7 @@ useEffect(() => {
     const Profile = async () => {
       if (!user) return; // If user is not set, return early
       try {
-        const response = await fetch(`http://localhost:5000/profile?email=${user}`, {
+        const response = await fetch(`${API_URL}/profile?email=${user}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -77,7 +78,6 @@ useEffect(() => {
         }
 
          const data = await response.json();
-        console.log(data);
       
 
         const userhandles =data.user.handles
@@ -176,7 +176,7 @@ useEffect(() => {
     console.log(search);
     // You can add your API call here to submit the form
     try {
-        const response = await fetch(`http://localhost:5000/searchUser?userhandle=${search}`, {
+        const response = await fetch(`${API_URL}/searchUser?userhandle=${search}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -193,7 +193,6 @@ useEffect(() => {
           alert("Invalid search")
         } else {
           const data = await response.json();
-          console.log(data);
 
            // alert("User found")
            // setViewUser(data.user);

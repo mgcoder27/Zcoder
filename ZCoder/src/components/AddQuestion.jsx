@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate  } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { API_URL } from '../constants/api';
 const AddQuestionForm = () => {
     const navigateTo = useNavigate();
   const [title, setTitle] = useState('');
   const [link, setLink] = useState('');
   const [solution, setSolution] = useState('');
+  const [difficulty, setDifficulty] = useState('Medium');
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [user, setUser] = useState('');
   const topicsOptions = [ 'Arrays','Linked List','Dynamic Programming','Graphs','Trees','Sorting and Searching'];
@@ -26,11 +28,10 @@ const AddQuestionForm = () => {
 
  const handleSubmit = async(e) => {
     e.preventDefault();
-    const newQuestion = { title, link, topics: selectedTopics, solution };
-    console.log(newQuestion);
+    const newQuestion = { title, link, topics: selectedTopics, solution, difficulty };
     // You can add your API call here to submit the form
     try {
-        const response = await fetch(`http://localhost:5000/questions?email=${user}`, {
+        const response = await fetch(`${API_URL}/questions?email=${user}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -46,10 +47,6 @@ const AddQuestionForm = () => {
           console.error("Error:", errorData);
           alert("Invalid credentials")
         } else {
-          const data = await response.json();
-          console.log(data);
-
-         // console.log(data.user.first_name)
           //localStorage.setItem('user', JSON.stringify(data.user));
           //localStorage.setItem('success',"true")
           toast.success("Question added successfully")
@@ -88,6 +85,19 @@ const AddQuestionForm = () => {
             className="w-full px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring focus:border-blue-500"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="difficulty" className="block text-sm font-medium mb-1 text-gray-300">Difficulty</label>
+          <select
+            id="difficulty"
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring focus:border-blue-500"
+          >
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
         </div>
         <div>
           <label htmlFor="topics" className="block text-sm font-medium mb-1 text-gray-300">Topics</label>

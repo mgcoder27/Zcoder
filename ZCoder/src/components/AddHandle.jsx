@@ -2,6 +2,7 @@ import React from 'react'
 import {toast } from 'react-toastify'
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../constants/api';
 
 const AddHandle = () => {
   const navigateTo =useNavigate();
@@ -30,7 +31,7 @@ const AddHandle = () => {
         console.log(newHandle);
         // You can add your API call here to submit the form
         try {
-            const response = await fetch(`http://localhost:5000/addHandles`, {
+            const response = await fetch(`${API_URL}/addHandles`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -46,8 +47,6 @@ const AddHandle = () => {
               console.error("Error:", errorData);
               toast.error("Invalid handle name or link")
             } else {
-              const data = await response.json();
-              console.log(data);
     
                 toast.success("Handle added successfully")
             

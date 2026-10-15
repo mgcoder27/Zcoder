@@ -51,6 +51,14 @@ handles: {
   type: Map,
   of: String,
 },
+progress: {
+  type: Map,
+  of: {
+    type: String,
+    enum: ["unsolved", "in-progress", "solved"],
+  },
+  default: {},
+},
 following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 

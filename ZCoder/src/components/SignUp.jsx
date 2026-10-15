@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../constants/api';
 import React, { useState } from 'react';
 import {  toast } from 'react-toastify';
 
@@ -19,7 +20,7 @@ const SignUp = () => {
        
     
         try {
-          const response = await fetch("http://localhost:5000/signin", {
+          const response = await fetch(`${API_URL}/signin`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -37,16 +38,13 @@ const SignUp = () => {
            
           } else {
             const data = await response.json();
-            console.log(data);
 
-            console.log(data.user.first_name)
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('success',"true")
             toast.success("Login successful")
-            const Profile = data.user;
-            console.log(Profile)
+            const profile = data.user;
             
-            navigateTo('/',{state:{Profile:Profile}})
+            navigateTo('/',{state:{Profile: profile}})
              // Uncomment this to navigate to home after successful registration
           }
         } catch (error) {

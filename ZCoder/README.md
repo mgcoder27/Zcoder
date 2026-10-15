@@ -1,86 +1,92 @@
-# Zcoder: All Your Coding Challenges in One Place
+# ZCoder
 
-Welcome to Zcoder, the ultimate hub for all your bookmarked coding problems! Collect and manage your favorite challenges from various coding platforms in one place. Start solving and keep track of your progress effortlessly!
+ZCoder helps you collect coding problems from multiple platforms, organize them by topic, and track your solving progress.
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [Contact](#contact)
-
-## Introduction
-
-Zcoder is designed to help developers organize and manage coding challenges from various platforms like LeetCode, HackerRank, Codeforces, and more. With Zcoder, you can bookmark your favorite problems, track your progress, and have a centralized repository for all your coding practice needs.
+**Live deployment:** [dezcoder.vercel.app](https://dezcoder.vercel.app/)
 
 ## Features
 
-- **Bookmark Challenges**: Save your favorite coding problems from multiple platforms.
-- **Progress Tracking**: Keep track of your solved, unsolved, and in-progress challenges.
-- **Tagging System**: Categorize challenges with custom tags for easier navigation.
-- **Search and Filter**: Quickly find challenges by tags, difficulty, or platform. Search your friends follow them.
-- **User-friendly Interface**: Simple and intuitive UI for a seamless experience and personalised profile .
-- **Note: Some features are still in progress and may not be fully functional yet. We appreciate your patience and feedback as we continue to improve Zcoder
+- Create an account, sign in, and manage a profile with coding-platform handles.
+- Add problem links and solutions, and bookmark problems for later.
+- Categorize questions by topic and difficulty.
+- Track each bookmarked question as unsolved, in progress, or solved.
+- Filter bookmarks by topic, difficulty, platform, and progress status, or search titles.
+- Recognize supported problem platforms from their URLs: LeetCode, Codeforces, HackerRank, CodeChef, AtCoder, and GeeksforGeeks.
 
+## Tech stack
 
-## Installation
+- **Frontend:** React, Vite, and Tailwind CSS
+- **Backend:** Node.js, Express, and Mongoose
+- **Database:** MongoDB
+- **Authentication support:** `express-session`; passwords are hashed with `bcryptjs`
+- **Backend tests:** Jest
 
-To get started with Zcoder, follow these steps:
+## Requirements
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/zcoder.git
-   ```
-2. **Navigate to the project directory:**
-   ```bash
-   cd zcoder
-   ```
-3. **Install the dependencies:**
-   ```bash
-   npm install
-   ```
-4. **Run the application:**
-   ```bash
-   npm start
-   ```
+- Node.js and npm
+- A MongoDB database and connection URI
 
-## Usage
+## Configuration
 
-1. **Register/Login**: Create an account or log in with your existing credentials.
-2. **Bookmark Challenges**: Use the platform's URL to bookmark coding problems.
-3. **Track Progress**: Update the status of your challenges as you work on them.
-4. **Organize with Tags**: Add custom tags to your challenges for better organization.
-5. **Search and Filter**: Utilize the search and filter options to quickly find challenges.
+Create the backend environment file from its example:
+
+```sh
+cd ZCoder/Backend
+cp .env.example .env
+```
+
+Set `Mongo_url` in `Backend/.env` to your MongoDB connection URI. Do not commit `.env`; the committed example contains placeholders only. The backend currently listens on port `5000`; although `port` appears in the example file, the current server startup code does not read it.
+
+For the frontend, create a local environment file from the frontend example:
+
+```sh
+cd ZCoder
+cp .env.example .env
+```
+
+`VITE_API_URL` configures the backend base URL. It defaults to `http://localhost:5000` when unset. Set it to the deployed API URL when running the frontend against a remote backend.
+
+## Run locally
+
+In one terminal, install and start the backend:
+
+```sh
+cd ZCoder/Backend
+npm ci
+node main.js
+```
+
+In another terminal, install and start the Vite development server:
+
+```sh
+cd ZCoder
+npm ci
+npm run dev
+```
+
+The frontend development server is available at `http://localhost:5173`.
+
+To create a frontend production build:
+
+```sh
+cd ZCoder
+npm run build
+```
+
+## Run backend tests
+
+```sh
+cd ZCoder/Backend
+npm ci
+npm test
+```
+
+The Jest suite covers platform detection, question filters, and progress-status validation.
 
 ## Contributing
 
-We welcome contributions from the community! To contribute to Zcoder, please follow these steps:
+1. Fork the repository and create a branch for your change.
+2. Make and test your changes.
+3. Push the branch and open a pull request.
 
-1. Fork the repository.
-2. Create a new branch:
-   ```bash
-   git checkout -b feature-branch
-   ```
-3. Make your changes and commit them:
-   ```bash
-   git commit -m "Add some feature"
-   ```
-4. Push to the branch:
-   ```bash
-   git push origin feature-branch
-   ```
-5. Open a pull request on GitHub.
-
-
-
-## Contact
-
-If you have any questions, suggestions, or feedback, feel free to contact us at manugarg1602@gmail.com
-
-
-Thank you for using Zcoder! Happy coding!
-
----
-
-Feel free to customize this README further based on your project's specifics and additional information you may want to include.
+Continuous integration runs the backend tests and frontend production build on pushes and pull requests.

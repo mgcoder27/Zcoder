@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import {toast} from 'react-toastify';
+import { API_URL } from '../constants/api';
 
 const BookmarkedQuestions = () => {
   const [questions, setQuestions] = useState([]);
@@ -27,7 +28,7 @@ const BookmarkedQuestions = () => {
     if (!user) return; // If user is not set, return early
     try {
       console.log(user);
-      const response = await fetch(`http://localhost:5000/question?email=${user}`, {
+      const response = await fetch(`${API_URL}/question?email=${user}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +68,7 @@ const BookmarkedQuestions = () => {
 
 
     try {
-      const response = await fetch(`http://localhost:5000/bookmark/${questionId}/${user}`, {
+      const response = await fetch(`${API_URL}/bookmark/${questionId}/${user}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,10 +91,7 @@ const BookmarkedQuestions = () => {
 
      
       
-      const data = await response.json();
-     
-    console.log(data);
-    toast.success("Question Bookmarked Successfully");
+      toast.success("Question Bookmarked Successfully");
     } catch (error) {
       setError(error.message);
     } 

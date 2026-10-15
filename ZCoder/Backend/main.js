@@ -2,6 +2,19 @@ const express = require("express");
 const main = express();
 const multer = require("multer");
 const session = require('express-session');
+const bcrypt = require("bcryptjs");
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isBcryptHash = (value) => /^\$2[aby]\$\d{2}\$/.test(value);
+
+const validateRequiredFields = (body, fields) => {
+  const missingField = fields.find(
+    (field) => typeof body[field] !== "string" || body[field].trim() === ""
+  );
+  return missingField
+    ? `${missingField} is required`
+    : null;
+};
 
 const cors = require('cors');
 main.use(cors({
@@ -19,6 +32,11 @@ main.use(session({
 
 const User = require("./user");
 const Question = require("./questionschema");
+const {
+  detectPlatform,
+  filterQuestions,
+  isValidProgressStatus,
+} = require("./utils");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -49,17 +67,28 @@ main.get("/", async (req, res) => {
 main.post("/questions", async (req, res) => {
   const userEmail = req.query.email;
   //const userId = "665aa2ad3c5c5ce5ada302b0";
-  const { title, link, topics ,solution} = req.body;
+  const { title, link, topics, solution, difficulty = "Medium" } = req.body;
+  let parsedLink;
+  try {
+    parsedLink = new URL(link);
+  } catch {
+    return res.status(400).json({ message: "link must be a valid http(s) URL" });
+  }
+  if (parsedLink.protocol !== "http:" && parsedLink.protocol !== "https:") {
+    return res.status(400).json({ message: "link must be a valid http(s) URL" });
+  }
+  if (!["Easy", "Medium", "Hard"].includes(difficulty)) {
+    return res.status(400).json({ message: "difficulty must be Easy, Medium, or Hard" });
+  }
   const topicsArray = Array.isArray(topics) ? topics : [topics];
   const question = new Question({
     title: title,
     link: link,
     topics: topicsArray,
+    difficulty,
+    platform: detectPlatform(link),
     solution: solution
   });
-
-  console.log(question);
-
 
   try {
     await question.save();
@@ -79,30 +108,37 @@ main.post("/questions", async (req, res) => {
 
 main.post("/register", upload.single("profile_image"), async (req, res) => {
   try {
-
-   
-    if (!req.file) {
-      console.log("here");
-      return res.status(400).send("No file uploaded.");
-     
+    const missingField = validateRequiredFields(req.body, [
+      "first_name",
+      "last_name",
+      "city",
+      "college",
+      "email",
+      "userhandle",
+      "password",
+    ]);
+    if (missingField) {
+      return res.status(400).json({ message: missingField });
     }
-
-   
+    if (!emailPattern.test(req.body.email.trim())) {
+      return res.status(400).json({ message: "email must be valid" });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: "profile_image is required" });
+    }
 
     const user = new User({
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       city: req.body.city,
       college: req.body.college,
-      email: req.body.email,
-     userhandle: req.body.userhandle.toLowerCase(),
+      email: req.body.email.trim(),
+      userhandle: req.body.userhandle.toLowerCase(),
       profile_image: req.body.profile_image,
-      password: req.body.password,
+      password: await bcrypt.hash(req.body.password, 12),
       bookmark: [],
       following: [],
-    
     });
-     console.log(user);
 
     try {
       await user.save();
@@ -138,8 +174,28 @@ main.post("/register", upload.single("profile_image"), async (req, res) => {
 
 main.post("/signin", async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (user.password === req.body.password) {
+    const missingField = validateRequiredFields(req.body, ["email", "password"]);
+    if (missingField) {
+      return res.status(400).json({ message: missingField });
+    }
+    if (!emailPattern.test(req.body.email.trim())) {
+      return res.status(400).json({ message: "email must be valid" });
+    }
+
+    const user = await User.findOne({ email: req.body.email.trim() });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const passwordMatches = isBcryptHash(user.password)
+      ? await bcrypt.compare(req.body.password, user.password)
+      : user.password === req.body.password;
+
+    if (passwordMatches) {
+      if (!isBcryptHash(user.password)) {
+        user.password = await bcrypt.hash(req.body.password, 12);
+        await user.save();
+      }
       const questions = await Question.find();
       if (req.session.questionToBookmark) {
         user.bookmark.push(req.session.questionToBookmark);
@@ -155,7 +211,6 @@ main.post("/signin", async (req, res) => {
        return res.json({ user, bookmarkedQuestions });
       }
 
-      console.log(user);
       //res.render("landing", { user, questions });
       return res.json({ user, questions });
     } else {
@@ -205,7 +260,18 @@ main.get("/bookmarkquestions", async (req, res) => {
         const bookmarkedQuestions = await Question.find({
           _id: { $in: user.bookmark },
         });
-       return res.json({ user, bookmarkedQuestions });
+        const questionsWithStatus = bookmarkedQuestions.map((question) => ({
+          ...question.toObject(),
+          status: user.progress?.get(question._id.toString()) || "unsolved",
+        }));
+        const filteredQuestions = filterQuestions(questionsWithStatus, {
+          tag: req.query.tag,
+          difficulty: req.query.difficulty,
+          platform: req.query.platform,
+          status: req.query.status,
+          q: req.query.q,
+        });
+       return res.json({ user, bookmarkedQuestions: filteredQuestions });
       
     } else {
       res.status(404).send("User not found");
@@ -213,6 +279,42 @@ main.get("/bookmarkquestions", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
+  }
+});
+
+main.post("/progress/:questionId/:email", async (req, res) => {
+  const { questionId, email } = req.params;
+  const { status } = req.body;
+  if (!isValidProgressStatus(status)) {
+    return res.status(400).json({
+      message: "status must be unsolved, in-progress, or solved",
+    });
+  }
+  if (!/^[a-f\d]{24}$/i.test(questionId)) {
+    return res.status(400).json({ message: "questionId must be valid" });
+  }
+
+  try {
+    const [user, question] = await Promise.all([
+      User.findOne({ email }),
+      Question.findById(questionId),
+    ]);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    if (!user.progress) {
+      user.progress = new Map();
+    }
+    user.progress.set(questionId, status);
+    await user.save();
+    return res.json({ status });
+  } catch (error) {
+    console.error("Error updating question progress:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -286,33 +388,52 @@ main.get("/edit", async (req, res) => {
 
 main.post("/update", async (req, res) => {
   try {
-      const userId = req.query.userId; 
-      const updatedUserData = {
-          first_name: req.body.first_name,
-          last_name: req.body.last_name,
-          city: req.body.city,
-          college: req.body.college,
-          email: req.body.email,
-          userhandle: req.body.userhandle,
-          password: req.body.password, 
-    };
-    console.log(updatedUserData);
+    const missingField = validateRequiredFields(req.body, [
+      "first_name",
+      "last_name",
+      "city",
+      "college",
+      "email",
+      "userhandle",
+      "password",
+    ]);
+    if (!req.query.userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
+    if (missingField) {
+      return res.status(400).json({ message: missingField });
+    }
+    if (!emailPattern.test(req.body.email.trim())) {
+      return res.status(400).json({ message: "email must be valid" });
+    }
 
-      const updatedUser = await User.findOneAndUpdate(
-          { _id: userId },
-          updatedUserData,
-          { new: true } 
-      );
-     
+    const updatedUser = await User.findById(req.query.userId);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-      if (!updatedUser) {
-          return res.status(404).send("User not found"); 
-      }
+    const submittedPassword = req.body.password;
+    const password = isBcryptHash(updatedUser.password) &&
+      submittedPassword === updatedUser.password
+      ? updatedUser.password
+      : await bcrypt.hash(submittedPassword, 12);
 
-      return res.json({ user: updatedUser });
+    updatedUser.first_name = req.body.first_name;
+    updatedUser.last_name = req.body.last_name;
+    updatedUser.city = req.body.city;
+    updatedUser.college = req.body.college;
+    updatedUser.email = req.body.email.trim();
+    updatedUser.userhandle = req.body.userhandle;
+    updatedUser.password = password;
+    await updatedUser.save();
+
+    return res.json({ user: updatedUser });
   } catch (error) {
-      console.error("Error updating user:", error);
-      res.status(500).send("Internal Server Error");
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email or user handle already exists" });
+    }
+    console.error("Error updating user:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
@@ -355,8 +476,6 @@ main.get('/searchUser', async (req, res) => {
       if (!user) {
           return res.status(404).send("User not found");
       }
-      console.log(user);
-
       return res.json({ user }); 
   } catch (error) {
       console.error("Error searching user:", error);

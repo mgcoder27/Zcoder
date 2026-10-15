@@ -22,6 +22,14 @@ mongoose.connect(process.env.Mongo_url)
         topics: {
             type: [String]
         },
+        difficulty: {
+            type: String,
+            enum: ["Easy", "Medium", "Hard"],
+            default: "Medium"
+        },
+        platform: {
+            type: String
+        },
         solution: {
             type: String,
             required: true,

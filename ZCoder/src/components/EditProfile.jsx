@@ -3,6 +3,7 @@ import {toast} from 'react-toastify';
 import React from 'react'
 import { useState,useEffect } from 'react';
 import {  useNavigate } from 'react-router-dom';
+import { API_URL } from '../constants/api';
 
 const EditProfile = () => {
     const navigateTo = useNavigate();
@@ -37,12 +38,10 @@ const EditProfile = () => {
     },[])
     const handleSubmit = async (e) => {
       e.preventDefault();
-      
-     console.log(credentials);
         
   
       try {
-        const response = await fetch(`http://localhost:5000/update?userId=${id}`, {
+        const response = await fetch(`${API_URL}/update?userId=${id}`, {
           method: "POST",
           headers: {
             'Content-Type': 'application/json'
@@ -60,7 +59,6 @@ const EditProfile = () => {
           const data = await response.json();
           localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('success',"true")
-          console.log(data);
           toast.success("Profile updated successfully")
           navigateTo('/myprofile')
        // navigateTo('/login')
