@@ -3,6 +3,7 @@ const main = express();
 const multer = require("multer");
 const session = require('express-session');
 const bcrypt = require("bcryptjs");
+const path = require("path");
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isBcryptHash = (value) => /^\$2[aby]\$\d{2}\$/.test(value);
@@ -18,11 +19,13 @@ const validateRequiredFields = (body, fields) => {
 
 const cors = require('cors');
 main.use(cors({
-
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://dezcoder.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   methods: ['GET', 'POST']
 }));
-
 
 main.use(session({
   secret: 'your-secret-key',
@@ -40,7 +43,7 @@ const {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    return cb(null, "./views/uploads");
+    return cb(null, path.join(__dirname, "views", "uploads"));
   },
   filename: function (req, file, cb) {
     return cb(null, `${Date.now()}-${file.originalname}`);
@@ -52,10 +55,9 @@ const upload = multer({ storage });
 main.use(express.json());
 main.set("view engine", "ejs");
 main.use(express.urlencoded({ extended: false }));
-main.use(express.static("./views"));
-
-main.listen(5000, () => {
-  console.log("port connected");
+main.use(express.static(path.join(__dirname, "views")));
+main.listen(process.env.PORT || 5000, () => {
+  console.log(`Server listening on port ${process.env.PORT || 5000}`);
 });
 
 main.get("/", async (req, res) => {

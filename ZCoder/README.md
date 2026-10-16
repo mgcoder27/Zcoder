@@ -35,7 +35,7 @@ cd ZCoder/Backend
 cp .env.example .env
 ```
 
-Set `Mongo_url` in `Backend/.env` to your MongoDB connection URI. Do not commit `.env`; the committed example contains placeholders only. The backend currently listens on port `5000`; although `port` appears in the example file, the current server startup code does not read it.
+Set `Mongo_url` in `Backend/.env`. Do not commit `.env`; the committed example contains placeholders only.
 
 For the frontend, create a local environment file from the frontend example:
 
@@ -44,7 +44,20 @@ cd ZCoder
 cp .env.example .env
 ```
 
-`VITE_API_URL` configures the backend base URL. It defaults to `http://localhost:5000` when unset. Set it to the deployed API URL when running the frontend against a remote backend.
+`VITE_API_URL` optionally configures the backend base URL. It defaults to `http://localhost:5000` during local development and to the deployed Render API in production.
+
+## Deploy to Render
+
+The React frontend is hosted separately from the Express API. The existing Render service hosts the API at `https://zcoder-904x.onrender.com`.
+
+To connect or redeploy the backend service in Render:
+
+1. Use the repository containing `ZCoder/Backend` and set its root directory to `ZCoder/Backend`.
+2. Set the build command to `npm ci` and the start command to `node main.js`.
+3. Set `Mongo_url` to the MongoDB connection URI and set `FRONTEND_URL` to the deployed frontend origin if it differs from `https://dezcoder.vercel.app`.
+4. Deploy the service. The server listens on Render's assigned `PORT` (or port `5000` locally).
+
+Render's default filesystem is ephemeral, so profile-image uploads stored in `Backend/views/uploads` are not durable across deploys or restarts; use persistent storage or object storage if uploads must be retained.
 
 ## Run locally
 
