@@ -2,17 +2,66 @@
   "scripts": {
     "test": "jest"
   },
+  
+
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "ejs": "^3.1.10",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.1.2"
+  
+
+    
+
+  "bcryptjs": "^3.0.3",
+  
+
+    
+
+  "cors": "^2.8.5",
+  
+
+    
+
+  "dotenv": "^17.2.2",
+  
+
+    
+
+  "ejs": "^3.1.10",
+  
+
+    
+
+  "express": "^4.19.2",
+  
+
+    
+
+  "express-session": "^1.18.0",
+  
+
+    
+
+  "mongoose": "^8.4.0",
+  
+
+    
+
+  "multer": "^1.4.5-lts.1",
+  
+
+    
+
+  "nodemon": "^3.1.2"
+  
+
   },
+  
+
   "devDependencies": {
-    "jest": "^30.5.2"
+  
+
+    
+
+  "jest": "^30.5.2"
+  
+
   }
 }
