@@ -16,15 +16,15 @@ ZCoder helps you collect coding problems from multiple platforms, organize them 
 ## Tech stack
 
 - **Frontend:** React, Vite, and Tailwind CSS
-- **Backend:** Node.js, Express, and Mongoose
-- **Database:** MongoDB
+- **Backend:** Node.js and Express
+- **Storage:** in-memory users and questions
 - **Authentication support:** `express-session`; passwords are hashed with `bcryptjs`
 - **Backend tests:** Jest
 
 ## Requirements
 
 - Node.js and npm
-- A MongoDB database and connection URI
+- No external database is required.
 
 ## Configuration
 
@@ -35,7 +35,9 @@ cd ZCoder/Backend
 cp .env.example .env
 ```
 
-Set `Mongo_url` in `Backend/.env`. Do not commit `.env`; the committed example contains placeholders only.
+The backend uses in-memory storage and does not need a database connection. Set
+`FRONTEND_URL` only if your deployed frontend uses a different origin. Do not
+commit `.env`.
 
 For the frontend, create a local environment file from the frontend example:
 
@@ -54,10 +56,13 @@ To connect or redeploy the backend service in Render:
 
 1. Use the repository containing `ZCoder/Backend` and set its root directory to `ZCoder/Backend`.
 2. Set the build command to `npm ci` and the start command to `node main.js`.
-3. Set `Mongo_url` to the MongoDB connection URI and set `FRONTEND_URL` to the deployed frontend origin if it differs from `https://dezcoder.vercel.app`.
+3. Set `FRONTEND_URL` to the deployed frontend origin if it differs from `https://dezcoder.vercel.app`.
 4. Deploy the service. The server listens on Render's assigned `PORT` (or port `5000` locally).
 
-Render's default filesystem is ephemeral, so profile-image uploads stored in `Backend/views/uploads` are not durable across deploys or restarts; use persistent storage or object storage if uploads must be retained.
+Users, questions, bookmarks, and progress are held in process memory and are
+cleared whenever the backend restarts or redeploys. Uploaded profile images are
+also stored on Render's ephemeral filesystem and do not survive restarts. This
+mode is suitable for demos, not durable accounts or production use.
 
 ## Run locally
 

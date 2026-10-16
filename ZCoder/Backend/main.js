@@ -1,9 +1,13 @@
+require("dotenv").config();
+
 const express = require("express");
 const main = express();
 const multer = require("multer");
 const session = require('express-session');
 const bcrypt = require("bcryptjs");
 const path = require("path");
+const fs = require("fs");
+const { randomUUID } = require("crypto");
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isBcryptHash = (value) => /^\$2[aby]\$\d{2}\$/.test(value);
@@ -41,33 +45,45 @@ const {
   isValidProgressStatus,
 } = require("./utils");
 
+const uploadsDirectory = path.join(__dirname, "views", "uploads");
+fs.mkdirSync(uploadsDirectory, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    return cb(null, path.join(__dirname, "views", "uploads"));
+    return cb(null, uploadsDirectory);
   },
   filename: function (req, file, cb) {
-    return cb(null, `${Date.now()}-${file.originalname}`);
+    return cb(null, `${randomUUID()}${path.extname(file.originalname).toLowerCase()}`);
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 main.use(express.json());
 main.set("view engine", "ejs");
 main.use(express.urlencoded({ extended: false }));
 main.use(express.static(path.join(__dirname, "views")));
-main.listen(process.env.PORT || 5000, () => {
-  console.log(`Server listening on port ${process.env.PORT || 5000}`);
-});
+if (require.main === module) {
+  const port = process.env.PORT || 5000;
+  main.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+}
 
-main.get("/", async (req, res) => {
-  const id = "68c06cf05638579c40171040";
-  const user = await User.findById(id);
-  const questions = await Question.find();
-  res.render("landing", { user, questions });
+main.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    storage: "in-memory",
+    note: "Accounts and questions are cleared whenever the server restarts.",
+  });
 });
 main.post("/questions", async (req, res) => {
   const userEmail = req.query.email;
+  const user = await User.findOne({ email: userEmail });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
   //const userId = "665aa2ad3c5c5ce5ada302b0";
   const { title, link, topics, solution, difficulty = "Medium" } = req.body;
   let parsedLink;
@@ -94,16 +110,14 @@ main.post("/questions", async (req, res) => {
 
   try {
     await question.save();
-    const user = await User.findOne({ email: userEmail });
-    if (user) {
-      
-        const questions = await Question.find();
-        return res.json({ user, questions });
-        //res.render("landing", { user, questions });
-      
-    }
+    const questions = await Question.find();
+    return res.json({ user, questions });
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Question link already exists" });
+    }
+    console.error("Error saving question:", error);
+    return res.status(500).send("Internal Server Error");
   }
 });
 
@@ -136,7 +150,7 @@ main.post("/register", upload.single("profile_image"), async (req, res) => {
       college: req.body.college,
       email: req.body.email.trim(),
       userhandle: req.body.userhandle.toLowerCase(),
-      profile_image: req.body.profile_image,
+      profile_image: `/uploads/${req.file.filename}`,
       password: await bcrypt.hash(req.body.password, 12),
       bookmark: [],
       following: [],
@@ -163,7 +177,7 @@ main.post("/register", upload.single("profile_image"), async (req, res) => {
       if (err.code === 11000) {
         return res.status(400).send("Email already exists");
       } else {
-        console.error("Error inserting data into MongoDB:", err);
+        console.error("Error storing user in memory:", err);
         return res.status(500).send("Internal Server Error");
 
       }
@@ -326,7 +340,7 @@ main.post("/unbookmark/:questionId/:email", async (req, res) => {
 
   const user = await User.findOne({ email: userEmail });
   if (user) {
-    index = user.bookmark.findIndex((id) => id !== questionId);
+    const index = user.bookmark.findIndex((id) => id === questionId);
     if (index !== -1) {
       user.bookmark.splice(index, 1);
     }
@@ -345,8 +359,11 @@ main.get("/landing", async (req, res) => {
 
   try {
     const user = await User.findById(userId);
-      const questions = await Question.find();
-      res.render("landing", { user, questions });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    const questions = await Question.find();
+    return res.render("landing", { user, questions });
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
@@ -509,6 +526,10 @@ main.post('/follow/:userId', async (req, res) => {
   try {
     const user = await User.findById(userId);
 
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
       if (!user.following) {
         user.following = [];
         user.following.push(userIdToFollow);
@@ -526,3 +547,5 @@ main.post('/follow/:userId', async (req, res) => {
       res.status(500).send("Internal Server Error");
   }
 });
+
+module.exports = main;
