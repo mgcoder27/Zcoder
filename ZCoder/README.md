@@ -48,7 +48,7 @@ cp .env.example .env
 
 ## Deploy to Render
 
-The React frontend is hosted separately from the Express API. The existing Render service hosts the API at `https://zcoder-904x.onrender.com`.
+The React frontend is hosted separately from the Express API. The Render service hosts the API at `https://zcoder-efnp.onrender.com`.
 
 To connect or redeploy the backend service in Render:
 
